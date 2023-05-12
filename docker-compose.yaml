@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  app-desafio:
+    build:
+      context: ./node
+    container_name: app-desafio
+    # vai aguardar o sql ficar de pé para conectar, e
+    # entrypoint: dockerize -wait tcp://db-desafio:3306 -timeout 20s docker-entrypoint.sh
+    entrypoint: dockerize -wait tcp://db-desafio:3306 -timeout 20s docker-entrypoint.sh
+    command: npm start
+    networks:
+      - node-desafio
+    volumes:
+      - ./node:/usr/src/app
+    tty: true
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db
+      # no dockerfile do node, tem a instalaçao do dockerize que vai conseguir verificar se existe o servico foi pro ar
+
+  db:
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: db-desafio
+    restart: always
+    tty: true
+    volumes:
+      - ./data:/var/lib/mysql
+
+    environment:
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - node-desafio
+
+  nginx:
+    build:
+      context: ./nginx
+    container_name: nginx-node
+    image: victorshin/node-desafio
+    networks:
+      - node-desafio
+    ports:
+      - '8080:80'
+    depends_on:
+      - app-desafio
+
+networks:
+  node-desafio:
+    driver: bridge
+# quando mudar os arquivos do dockerfile
+# docker-compose up -d --build
