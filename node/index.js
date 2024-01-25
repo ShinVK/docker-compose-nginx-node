@@ -2,12 +2,13 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const app = express();
 const port = 3000;
+
 const config = {
   host: 'db',
-  user: 'root',
-  password: 'root',
-  database: 'nodedb',
-};
+  user: 'admin',
+  password: 'admin',
+  database: 'nodedb'
+}
 
 app.get('/', async (req, res) => {
   const connection = await mysql.createConnection(config);

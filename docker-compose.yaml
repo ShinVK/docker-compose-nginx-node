@@ -1,14 +1,13 @@
 version: '3'
 
 services:
+# nome que vai ser dado pro servico dentro do docker compose
   app-desafio:
     build:
-      context: ./node
-    container_name: app-desafio
-    # vai aguardar o sql ficar de pé para conectar, e
-    # entrypoint: dockerize -wait tcp://db-desafio:3306 -timeout 20s docker-entrypoint.sh
-    entrypoint: dockerize -wait tcp://db-desafio:3306 -timeout 20s docker-entrypoint.sh
-    command: npm start
+      context: node
+    container_name: node_app
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 40s sh -c "npm install && node index.js"
+    restart: always
     networks:
       - node-desafio
     volumes:
@@ -18,28 +17,28 @@ services:
       - '3000:3000'
     depends_on:
       - db
-      # no dockerfile do node, tem a instalaçao do dockerize que vai conseguir verificar se existe o servico foi pro ar
 
   db:
     image: mysql:5.7
+    volumes:
+      - ./mysql:/var/lib/mysql
     command: --innodb-use-native-aio=0
-    container_name: db-desafio
+    # nome que vai aparecer no docker ps
+    container_name: mysql
     restart: always
     tty: true
-    volumes:
-      - ./data:/var/lib/mysql
-
-    environment:
-      - MYSQL_DATABASE=nodedb
-      - MYSQL_ROOT_PASSWORD=root
     networks:
       - node-desafio
+    environment:
+      MYSQL_DATABASE: nodedb
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
 
   nginx:
     build:
-      context: ./nginx
+      context: nginx
     container_name: nginx-node
-    image: victorshin/node-desafio
     networks:
       - node-desafio
     ports:
